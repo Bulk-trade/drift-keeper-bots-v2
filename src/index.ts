@@ -222,7 +222,7 @@ logger.info(
 	`Bot config:\n${JSON.stringify(
 		config,
 		(k, v) => {
-			if (k === 'keeperPrivateKey') {
+			if (k === 'keeperPrivateKey' && v) {
 				return '*'.repeat(v.length);
 			}
 			return v;

@@ -3,13 +3,13 @@ global:
   driftEnv: mainnet-beta
 
   # RPC endpoint to use
-  endpoint: https://you-need-your-own-rpc.com
+  endpoint: https://bulk.rpcpool.com/1e245781-b06d-4601-b628-61babccfcfa2
 
   # Custom websocket endpoint to use (if null will be determined from `endpoint``)
   # Note: the default wsEndpoint value simply replaces http(s) with ws(s), so if
   #       your RPC provider requires a special path (i.e. /ws) for websocket connections
   #       you must set this.
-  wsEndpoint:
+  wsEndpoint: ws://bulk.rpcpool.com/1e245781-b06d-4601-b628-61babccfcfa2
 
   # optional if you want to use helius' global priority fee method AND `endpoint` is not
   # already a helius url.
@@ -17,7 +17,7 @@ global:
 
   # optional endpoint to use for just confirming txs to check if they landed.
   # loop purposefully runs slow so should work with public RPC
-  txConfirmationEndpoint: https://api.mainnet-beta.solana.com
+  txConfirmationEndpoint: https://rpc.ironforge.network/mainnet?apiKey=01HV2MAZSHPMQYA14FGGSFAG0R
 
   # `solana` or `helius`. If `helius` `endpoint` must be a helius RPC, or `heliusEndpoint`
   #   must be set
@@ -28,7 +28,7 @@ global:
   # skips preflight checks on sendTransaciton, default is false.
   # this will speed up tx sending, but may increase SOL paid due to failed txs landing
   # on chain
-  #txSkipPreflight: true
+  txSkipPreflight: true
 
   # max priority fee to use, in micro lamports
   # i.e. a fill that uses 500_000 CUs will spend:
@@ -38,7 +38,7 @@ global:
 
   # Private key to use to sign transactions.
   # will load from KEEPER_PRIVATE_KEY env var if null
-  keeperPrivateKey:
+  keeperPrivateKey: 30,88,39,97,96,215,35,133,178,108,254,143,46,108,135,252,214,250,164,205,221,50,199,205,150,138,208,252,128,168,96,231,73,253,109,102,208,3,56,175,79,133,199,168,235,95,190,111,217,192,9,166,171,138,158,217,178,155,116,17,37,109,87,131
 
   initUser: false # initialize user on startup
   testLiveness: false # test liveness, by failing liveness test after 1 min
@@ -62,6 +62,7 @@ global:
   # - 2
   subaccounts:
     - 0
+    - 1
 
   eventSubscriberPollingInterval: 5000
   bulkAccountLoaderPollingInterval: 5000
@@ -72,7 +73,7 @@ global:
   # * jito-only: will only send txs via bundle when there is an active jito leader
   # * hybrid: will attempt to send bundles when active jito leader, and use RPC when not
   # hybrid may not work well if using high throughput bots such as a filler depending on infra limitations.
-  jitoStrategy: jito-only
+  jitoStrategy: hybrid
   # the minimum tip to pay
   jitoMinBundleTip: 10000
   # the maximum tip to pay (will pay this once jitoMaxBundleFailCount is hit)
@@ -91,13 +92,13 @@ global:
 # Bot specific configs are below
 enabledBots:
   # Perp order filler bot
-  - filler
+  # - filler
 
   # Spot order filler bot
   # - spotFiller
 
   # Trigger bot (triggers trigger orders)
-  - trigger
+  # - trigger
 
   # Liquidator bot, liquidates unhealthy positions by taking over the risk (caution, you should manage risk here)
   # - liquidator
@@ -106,7 +107,7 @@ enabledBots:
   # - jitMaker
 
   # Example maker bot that posts floating oracle orders
-  # - floatingMaker
+  - floatingMaker
 
   # settles PnLs for the insurance fund (may want to run with runOnce: true)
   # - ifRevenueSettler
@@ -118,19 +119,33 @@ enabledBots:
 
 # below are bot configs
 botConfigs:
-  filler:
-    botId: "filler"
+  floatingMaker:
+    botId: "floating-maker"
     dryRun: false
-    fillerPollingInterval: 6000
     metricsPort: 9464
+    bidSpreadBps: 10
+    askSpreadBps: 10
+    minSpreadBps: 5
+    dynamicSpreadFactor: 1.5
+    
+    orderRefreshMs: 10000
+    orderRefreshToleranceBps: 20
+    
+    maxPositionSizeQuote: 1000
+    maxLeverage: 5
+    
+    targetLeverage: 1
+    inventorySkewEnabled: true
+    inventoryTargetPct: 50
+    
+    hangingOrdersEnabled: true
+    hangingOrdersCancelPct: 100
+    
+    filledOrderDelayMs: 60000
+    filledOrderDelayPct: 50
 
-    # will revert a transaction during simulation if a fill fails, this will save on tx fees,
-    # and be friendlier for use with services like Jito.
-    # Default is true
+    debugLogs: false
     revertOnFailure: true
-
-    # calls simulateTransaction before sending to get an accurate CU estimate
-    # as well as stop before sending the transaction (Default is true)
     simulateTxForCUEstimate: true
 
   spotFiller:

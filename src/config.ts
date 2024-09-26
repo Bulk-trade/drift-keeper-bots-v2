@@ -121,6 +121,25 @@ export type SwitchboardCrankerBotConfig = BaseBotConfig & {
 	};
 };
 
+export type FloatingMakerConfig = BaseBotConfig & {
+	bidSpreadBps: number;
+	askSpreadBps: number;
+	minSpreadBps: number;
+	dynamicSpreadFactor: number;
+	orderRefreshMs: number;
+	orderRefreshToleranceBps: number;
+	maxPositionSizeQuote: number;
+	maxLeverage: number;
+	targetLeverage: number;
+	inventorySkewEnabled: boolean;
+	inventoryTargetPct: number;
+	hangingOrdersEnabled: boolean;
+	hangingOrdersCancelPct: number;
+	filledOrderDelayMs: number;
+	filledOrderDelayPct: number;
+	debugLogs: boolean;
+};
+
 export type BotConfigMap = {
 	fillerMultithreaded?: FillerMultiThreadedConfig;
 	spotFillerMultithreaded?: FillerMultiThreadedConfig;
@@ -129,7 +148,7 @@ export type BotConfigMap = {
 	spotFiller?: FillerConfig;
 	trigger?: BaseBotConfig;
 	liquidator?: LiquidatorConfig;
-	floatingMaker?: BaseBotConfig;
+	floatingMaker?: FloatingMakerConfig;
 	jitMaker?: JitMakerConfig;
 	ifRevenueSettler?: BaseBotConfig;
 	fundingRateUpdater?: BaseBotConfig;
@@ -256,7 +275,29 @@ const defaultConfig: Partial<Config> = {
 		rebalanceFiller: false,
 	},
 	enabledBots: [],
-	botConfigs: {},
+	botConfigs: {
+		floatingMaker: {
+			dryRun: false,
+			botId: 'floatingMaker',
+			metricsPort: 9464,
+			bidSpreadBps: 10,
+			askSpreadBps: 10,
+			minSpreadBps: 5,
+			dynamicSpreadFactor: 0.1,
+			orderRefreshMs: 5000,
+			orderRefreshToleranceBps: 1,
+			maxPositionSizeQuote: 1000,
+			maxLeverage: 5,
+			targetLeverage: 1,
+			inventorySkewEnabled: true,
+			inventoryTargetPct: 50,
+			hangingOrdersEnabled: true,
+			hangingOrdersCancelPct: 25,
+			filledOrderDelayMs: 1000,
+			filledOrderDelayPct: 50,
+			debugLogs: false,
+		},
+	},
 };
 
 function mergeDefaults<T>(defaults: T, data: Partial<T>): T {
@@ -521,6 +562,31 @@ export function loadConfigFromOpts(opts: any): Config {
 			botId: process.env.BOT_ID ?? 'uncrossArb',
 			metricsPort: 9464,
 			runOnce: opts.runOnce ?? false,
+		};
+	}
+
+	if (opts.floatingMaker) {
+		config.enabledBots.push('floatingMaker');
+		config.botConfigs!.floatingMaker = {
+			dryRun: opts.dryRun ?? false,
+			botId: process.env.BOT_ID ?? 'floatingMaker',
+			metricsPort: 9464,
+			bidSpreadBps: parseInt(opts.bidSpreadBps ?? '10'),
+			askSpreadBps: parseInt(opts.askSpreadBps ?? '10'),
+			minSpreadBps: parseInt(opts.minSpreadBps ?? '5'),
+			dynamicSpreadFactor: parseFloat(opts.dynamicSpreadFactor ?? '0.1'),
+			orderRefreshMs: parseInt(opts.orderRefreshMs ?? '5000'),
+			orderRefreshToleranceBps: parseInt(opts.orderRefreshToleranceBps ?? '1'),
+			maxPositionSizeQuote: parseInt(opts.maxPositionSizeQuote ?? '1000'),
+			maxLeverage: parseInt(opts.maxLeverage ?? '5'),
+			targetLeverage: parseInt(opts.targetLeverage ?? '1'),
+			inventorySkewEnabled: opts.inventorySkewEnabled ?? true,
+			inventoryTargetPct: parseInt(opts.inventoryTargetPct ?? '50'),
+			hangingOrdersEnabled: opts.hangingOrdersEnabled ?? true,
+			hangingOrdersCancelPct: parseInt(opts.hangingOrdersCancelPct ?? '25'),
+			filledOrderDelayMs: parseInt(opts.filledOrderDelayMs ?? '1000'),
+			filledOrderDelayPct: parseInt(opts.filledOrderDelayPct ?? '50'),
+			debugLogs: opts.debugLogs ?? false,
 		};
 	}
 
